@@ -14,9 +14,11 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Extract Vespera project
+      - name: Extract Vespera project safely
         run: |
-          unzip -q Vespera-GitHub-Upload.zip -d .
+          mkdir -p /tmp/vespera-project
+          unzip -oq Vespera-GitHub-Upload.zip -d /tmp/vespera-project
+          rsync -a --exclude='.github/' /tmp/vespera-project/ ./
           test -f settings.gradle.kts
           test -f app/build.gradle.kts
 
@@ -31,7 +33,7 @@ jobs:
 
       - name: Accept licenses and install SDK
         run: |
-          yes | sdkmanager --licenses || true
+          yes | sdkmanager --licenses
           sdkmanager "platforms;android-36.1" "build-tools;36.0.0"
 
       - name: Set up Gradle
