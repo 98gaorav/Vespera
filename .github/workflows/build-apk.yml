@@ -14,21 +14,27 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Set up Java 17
+      - name: Extract Vespera project
+        run: |
+          unzip -q Vespera-GitHub-Upload.zip -d .
+          test -f settings.gradle.kts
+          test -f app/build.gradle.kts
+
+      - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Android SDK and accept licenses
+      - name: Set up Android SDK
         uses: android-actions/setup-android@v3
-        with:
-          accept-android-sdk-licenses: true
 
-      - name: Install required Android SDK packages
-        run: sdkmanager "platforms;android-36.1" "build-tools;36.0.0"
+      - name: Accept licenses and install SDK
+        run: |
+          yes | sdkmanager --licenses || true
+          sdkmanager "platforms;android-36.1" "build-tools;36.0.0"
 
-      - name: Set up Gradle 9.3.1
+      - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '9.3.1'
@@ -40,13 +46,14 @@ jobs:
             -storepass android \
             -alias androiddebugkey \
             -keypass android \
-            -keyalg RSA -keysize 2048 -validity 10000 \
+            -keyalg RSA -keysize 2048 \
+            -validity 10000 \
             -dname "CN=Android Debug,O=Android,C=US"
 
-      - name: Build debug APK
+      - name: Build APK
         run: gradle --no-daemon :app:assembleDebug
 
-      - name: Upload APK artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Vespera-debug-APK
